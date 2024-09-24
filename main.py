@@ -3,6 +3,7 @@ import pyautogui
 import cv2
 import numpy as np
 import pytesseract
+import sounddevice as sd
 
 # 废话列表
 waste_phrases = [
@@ -104,8 +105,29 @@ waste_phrases = [
 # 定义截屏和识别的时间间隔（秒）
 interval = 1
 
+# 检查是否有媒体正在播放
+def is_media_playing(duration=1, threshold=0.01):
+    try:
+        with sd.InputStream(callback=lambda *args: None):
+            data = sd.rec(int(duration * 44100), samplerate=44100, channels=1, blocking=True)
+        
+        # 计算音频数据的均方根（RMS）值
+        rms = np.sqrt(np.mean(data**2))
+        
+        # 如果 RMS 值超过阈值，认为有媒体在播放
+        return rms > threshold
+    except sd.PortAudioError:
+        print("无法访问音频设备")
+        return False
+
 try:
     while True:
+        # 检查是否有媒体正在播放
+        if not is_media_playing():
+            print("没有媒体播放，跳过当前循环")
+            time.sleep(interval)
+            continue
+
         # 截取屏幕的指定区域
         # *这里要根据自己的实际屏幕大小，获取到字幕通常出现的区域范围
         reg = (700, 800, 600, 100)  # (x, y, width, height)
@@ -116,12 +138,6 @@ try:
 
         # 保存截图到当前路径
         screenshot.save(f"screenshot.png")
-        
-        # 转换颜色空间，从RGB转换为BGR
-        frame = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
-        
-        # 调整图像大小
-        frame = cv2.resize(frame, (640, 480))  # 调整到640x480的分辨率
         
         # 使用 Pytesseract 进行 OCR 识别
         try:
