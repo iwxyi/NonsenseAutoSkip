@@ -1,0 +1,4 @@
+.venv/
+.git/
+screenshot.png
+.DS_Store
