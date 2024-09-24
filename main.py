@@ -107,6 +107,7 @@ interval = 1
 try:
     while True:
         # 截取屏幕的指定区域
+        # *这里要根据自己的实际屏幕大小，获取到字幕通常出现的区域范围
         reg = (700, 800, 600, 100)  # (x, y, width, height)
         screenshot = pyautogui.screenshot(region=reg)
         
